@@ -2,9 +2,10 @@
 
 ## 👤 Perfil do Estudante
 - **Nome:** Gerlan Guerreiro Damasceno (Manaus-AM)
+- **LinkedIn:** [linkedin.com/in/gerlan-guerreiro-damasceno-4b4291145](https://www.linkedin.com/in/gerlan-guerreiro-damasceno-4b4291145/)
 - **Formação:** Tecnólogo em ADS (FAMETRO) / Técnico em Eletrônica Digital (FUCAPI)
-- **Stack Atual:** Python (Avançado), Shell Script, Java, C, Linux Desktop.
-- **Objetivo:** Primeira vaga em DevOps / Backend aos 30+.
+- **Stack Atual:** Python (Intermediário), Shell Script, Java, C, Linux Desktop.
+- **Objetivo:** Primeira vaga em DevOps / Backend.
 - **Ferramenta de Estudo Principal:** Claude Code (CLI Agent) com foco em Terminal.
 
 ## 🎯 Filosofia do Projeto
@@ -29,17 +30,15 @@ O objetivo real desta pasta é **a trilha de aprendizado DevOps em si** — não
 
 ## 🗺️ Cronograma de Módulos (Evolutivo e Incremental)
 
-- [ ] **Módulo 1: Fundamentos de Controle** `🔄 Em Progresso`
+- [x] **Módulo 1: Fundamentos de Controle** `✅ Concluído`
   - Git inicializado e boas práticas de prompts com Claude Code — feito.
   - Chave SSH dedicada ao GitHub (`~/.ssh/id_ed25519`, comentário `GitHub`, com passphrase) — feito. Cadastrada no GitHub como Authentication Key **e** Signing Key. Autenticação testada e confirmada (`ssh -T git@github.com`).
   - Git local configurado pra assinar commits (`gpg.format=ssh`, `user.signingkey`, `commit.gpgsign=true`) — feito.
   - Repositório remoto criado no GitHub e conectado (`origin` → `git@github.com:GerlanGuerreiro/aprendendo-devops.git`) — feito.
-  - **Pendente (retomar daqui):**
-    1. Renomear branch local de `master` pra `main` (`git branch -m main`).
-    2. Criar `README.md` inicial (portfólio).
-    3. Primeiro commit (assinado automaticamente) + `git push -u origin main`.
-    4. Verificar selo "Verified" no commit no GitHub.
-    5. Marcar Módulo 1 como concluído aqui + gerar rascunho de post de LinkedIn (ver princípio de Portfólio no Pacto de Aprendizado).
+  - Branch local renomeada de `master` pra `main` — feito.
+  - `README.md` inicial criado (portfólio, reflete a trilha completa de 12 módulos) — feito.
+  - Primeiro commit assinado (`e423db1`) + `git push -u origin main` — feito.
+  - Selo **"Verified"** confirmado no GitHub — assinatura SSH validada ponta a ponta.
   - Nada de runtime de aplicação (Python/venv) no host — só ferramentas de controle remoto.
   - (A VM do Módulo 2 terá sua **própria** chave SSH, separada desta — cada serviço com sua chave, sem reuso entre fronteiras de confiança diferentes.)
 - [ ] **Módulo 2: Laboratório Isolado com KVM** `🔄 Em Progresso`
@@ -101,8 +100,8 @@ O objetivo real desta pasta é **a trilha de aprendizado DevOps em si** — não
 
 ## 📈 Histórico de Progresso (Manter Atualizado)
 - **Data de Início:** Julho de 2026
-- **Status Atual:** Módulo 2 — `Em Progresso` (preparando laboratório isolado via KVM).
-- **Última alteração:** Trilha expandida para 12 módulos — adicionados Redes Linux Fundamentais (Módulo 4), Observabilidade com Prometheus/Grafana (Módulo 8), Infraestrutura como Código (Módulo 10) e Proficiência Avançada em Claude Code (Módulo 11). Lab de telemetria reenquadrado como "Monitor de Frota IoT" (mesmo código/dados, narrativa mais alinhada a DevOps).
+- **Status Atual:** Módulo 1 concluído ✅. Módulo 2 — `Em Progresso` (preparando laboratório isolado via KVM).
+- **Última alteração:** Módulo 1 finalizado — branch renomeada pra `main`, `README.md` de portfólio criado, primeiro commit assinado (`e423db1`) enviado ao GitHub via `git push -u origin main`, selo "Verified" confirmado (assinatura SSH validada ponta a ponta).
 
 ---
 
