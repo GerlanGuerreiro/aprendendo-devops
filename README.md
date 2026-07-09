@@ -14,9 +14,9 @@ Ponto de partida: Python intermediário, Shell Script, Java, C e Linux — a tri
 
 ## 🗺️ Trilha (12 módulos)
 
-- [ ] **01. Fundamentos de Controle** 🔄 — Git, SSH, GPG (commits assinados)
-- [ ] **02. Laboratório Isolado (KVM)** 🔄 — VM isolada via QEMU/KVM/libvirt
-- [ ] **03. Setup do Projeto na VM** — ambiente da aplicação isolado do host
+- [x] **01. Fundamentos de Controle** ✅ — Git, SSH, GPG (commits assinados)
+- [x] **02. Laboratório Isolado (KVM)** ✅ — VM isolada via QEMU/KVM/libvirt, acesso só por chave SSH
+- [ ] **03. Setup do Projeto na VM** 🔄 — ambiente da aplicação isolado do host
 - [ ] **04. Redes Linux Fundamentais** — bridges, namespaces, iptables/nftables, DNS
 - [ ] **05. Isolamento de Baixo Nível** — chroot, LXC
 - [ ] **06. Conteinerização Moderna** — Docker, Podman (rootless)

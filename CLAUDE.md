@@ -41,12 +41,16 @@ O objetivo real desta pasta é **a trilha de aprendizado DevOps em si** — não
   - Selo **"Verified"** confirmado no GitHub — assinatura SSH validada ponta a ponta.
   - Nada de runtime de aplicação (Python/venv) no host — só ferramentas de controle remoto.
   - (A VM do Módulo 2 terá sua **própria** chave SSH, separada desta — cada serviço com sua chave, sem reuso entre fronteiras de confiança diferentes.)
-- [ ] **Módulo 2: Laboratório Isolado com KVM** `🔄 Em Progresso`
-  - Instalação do hypervisor (QEMU/KVM/libvirt) no host — único grande install aceito, pois cria o isolamento.
-  - Criação de uma VM Linux Server via terminal (`virt-install`).
-  - Configuração de rede, segurança e acesso limpo via SSH por chave criptográfica.
+- [x] **Módulo 2: Laboratório Isolado com KVM** `✅ Concluído`
+  - Instalação do hypervisor (QEMU/KVM/libvirt/virtinst/bridge-utils) no host via `apt` — único grande install aceito, pois cria o isolamento — feito.
+  - Script `~/create-vm.sh` criado para provisionar a VM de forma reprodutível (`virt-install` com `--location`, 2 vCPU, 2GB RAM, disco de 20GB, rede `default` NAT, `--graphics none` + console serial — VM 100% headless, sem GUI).
+  - VM `devops-lab` criada e instalada com Debian 13 (netinst): idioma do sistema em inglês (prática de servidor), locale/teclado pt-BR, sem ambiente desktop, com `SSH server` selecionado no `tasksel`, sem senha de root (primeiro usuário criado já com `sudo`, prática recomendada do Debian 12+).
+  - Troubleshooting real registrado: `virt-install --location` reverte o boot pra `hd`-only ao cancelar (Ctrl+C) — não é bug, é limpeza esperada; recriada a VM do zero (`virsh undefine --remove-all-storage` + rerun do script) sem perda de dados (disco ainda vazio). Console serial "travado" após o boot foi, nas duas vezes, causa local (menu do GRUB sem redesenho, e depois `tmux` em copy-mode por causa de `mouse on` no `~/.tmux.conf` — scroll do mouse sequestra o teclado até apertar `q`) — não problema na VM.
+  - Chave SSH dedicada gerada (`~/.ssh/id_ed25519_devops-lab`, ed25519, com passphrase, comentário `devops-lab`) — separada da chave do GitHub, mesma lógica de "uma chave por serviço" do Módulo 1.
+  - Chave pública copiada via `ssh-copy-id`; login por chave testado e confirmado.
+  - Hardening do `sshd` via drop-in `/etc/ssh/sshd_config.d/hardening.conf` (`PasswordAuthentication no`, `PermitRootLogin no`), validado com `sshd -t` antes do restart, e testado em sessão nova antes de fechar a sessão antiga (nunca se trancar pra fora). Login por senha confirmado como recusado; login por chave confirmado funcionando.
   - A partir daqui, essa VM vira o "workbench" para todos os módulos seguintes.
-- [ ] **Módulo 3: Setup do Projeto dentro da VM**
+- [ ] **Módulo 3: Setup do Projeto dentro da VM** `🔄 Em Progresso`
   - Todo o trabalho de aplicação (venv, FastAPI, simulador de sensores) passa a rodar dentro da VM, via SSH.
   - Estrutura do lab `labs/telemetria-api/` (ver seção de escopo abaixo).
 - [ ] **Módulo 4: Redes Linux Fundamentais** `🆕`
@@ -100,10 +104,12 @@ O objetivo real desta pasta é **a trilha de aprendizado DevOps em si** — não
 
 ## 📈 Histórico de Progresso (Manter Atualizado)
 - **Data de Início:** Julho de 2026
-- **Status Atual:** Módulo 1 concluído ✅. Módulo 2 — `Em Progresso` (preparando laboratório isolado via KVM).
-- **Última alteração:** Módulo 1 finalizado — branch renomeada pra `main`, `README.md` de portfólio criado, primeiro commit assinado (`e423db1`) enviado ao GitHub via `git push -u origin main`, selo "Verified" confirmado (assinatura SSH validada ponta a ponta).
+- **Status Atual:** Módulos 1 e 2 concluídos ✅. Módulo 3 — `Em Progresso` (setup do projeto da API de telemetria dentro da VM).
+- **Última alteração:** Módulo 2 finalizado — VM `devops-lab` provisionada via `~/create-vm.sh` (`virt-install`, Debian 13, headless), chave SSH dedicada (`id_ed25519_devops-lab`) gerada e copiada via `ssh-copy-id`, `sshd` hardenizado (login por senha desabilitado via drop-in em `/etc/ssh/sshd_config.d/`), login por chave confirmado.
 
 ---
 
 ## 🛠️ Comandos e Notas Frequentes do Projeto
 *Guarde aqui comandos úteis que você ou o Claude Code executarem frequentemente no terminal para consulta rápida.*
+
+- **Ambiente de trabalho (tmux):** `./tools/tmux-dev.sh` abre uma sessão tmux `devops` já dividida — Claude Code rodando no painel esquerdo, terminal livre no painel direito, ambos na raiz do projeto. Rodar de novo com a sessão já aberta apenas reconecta (`tmux attach`) em vez de duplicar painéis.
