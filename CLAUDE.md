@@ -124,3 +124,4 @@ O objetivo real desta pasta é **a trilha de aprendizado DevOps em si** — não
 *Guarde aqui comandos úteis que você ou o Claude Code executarem frequentemente no terminal para consulta rápida.*
 
 - **Ambiente de trabalho (tmux):** `./tools/tmux-dev.sh` abre uma sessão tmux `devops` já dividida — Claude Code rodando no painel esquerdo, terminal livre no painel direito, ambos na raiz do projeto. Rodar de novo com a sessão já aberta apenas reconecta (`tmux attach`) em vez de duplicar painéis.
+- **Cola de comandos por módulo:** `docs/comandos-por-modulo.md` reúne só os comandos que deram certo em cada módulo (sem troubleshooting), pra consulta rápida ou impressão. Atualizar a cada módulo concluído (ou bloco relevante), junto do Histórico de Progresso acima.
