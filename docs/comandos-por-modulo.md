@@ -149,7 +149,7 @@ ssh -i ~/.ssh/id_ed25519_claude-ro claude-ro@<IP_DA_VM> "bash"              # re
 
 ---
 
-## Módulo 4 — Redes Linux Fundamentais `🔄 em andamento`
+## Módulo 4 — Redes Linux Fundamentais
 
 ```bash
 ip link show type bridge
@@ -178,6 +178,64 @@ sudo systemctl disable docker.socket
 sudo systemctl disable docker.service
 ```
 > `dpkg -l`: `-l` lista pacotes instalados (combinado com `grep` pra filtrar) · `--no-pager`: evita abrir o `less` interno do `systemctl`, imprime direto no terminal · Docker usa **socket activation** — `docker.socket` "acorda" o `docker.service` sob demanda mesmo com o serviço desabilitado, por isso os dois precisam ser desabilitados, não só um
+
+### Estágio 1 — namespaces, veth pairs e bridge
+
+```bash
+sudo ip netns add ns1
+sudo ip netns add ns2
+sudo ip link add veth-ns1 type veth peer name veth-br1
+sudo ip link add veth-ns2 type veth peer name veth-br2
+sudo ip link set veth-ns1 netns ns1
+sudo ip link set veth-ns2 netns ns2
+sudo ip link add name br-lab type bridge
+sudo ip link set veth-br1 master br-lab
+sudo ip link set veth-br2 master br-lab
+sudo ip netns exec ns1 ip addr add 10.10.10.1/24 dev veth-ns1
+sudo ip netns exec ns2 ip addr add 10.10.10.2/24 dev veth-ns2
+sudo ip netns exec ns1 ip link set veth-ns1 up
+sudo ip netns exec ns1 ip link set lo up
+sudo ip netns exec ns2 ip link set veth-ns2 up
+sudo ip netns exec ns2 ip link set lo up
+sudo ip link set veth-br1 up
+sudo ip link set veth-br2 up
+sudo ip link set br-lab up
+sudo ip addr add 10.10.10.254/24 dev br-lab
+```
+> `ip link add ... type veth peer name ...`: cria um par de interfaces conectadas ponta-a-ponta (um "cabo" virtual) · `ip link set <if> netns <ns>`: move uma interface pra dentro de um namespace de rede · `type bridge`: cria um switch virtual de camada 2 · `master br-lab`: pluga a interface como porta dessa bridge · `ip netns exec <ns> <cmd>`: roda um comando dentro do namespace de rede · **efêmero** — não sobrevive a reboot da VM; checar `ip netns list` no início de cada sessão e refazer se vier vazio
+
+```bash
+sudo ip netns exec ns1 ping -c 3 10.10.10.2
+```
+> valida que a bridge está encaminhando quadros corretamente entre os dois namespaces
+
+### Estágio 2 — firewall (NAT + bloqueio) com iptables-nft
+
+```bash
+sudo apt install iptables
+```
+> ausente no netinst mínimo, mesmo padrão de `git`/`curl`/`python3-venv` do Módulo 3 · no Debian moderno é na real `iptables-nft`: aceita a sintaxe clássica, mas grava as regras usando o motor `nftables` por baixo — confirmar com `sudo iptables -V` (mostra `(nf_tables)`) e `sudo nft list ruleset` (mesma regra em sintaxe nativa)
+
+```bash
+sudo ip netns exec ns1 ip route add default via 10.10.10.254
+sudo ip netns exec ns2 ip route add default via 10.10.10.254
+sudo iptables -t nat -A POSTROUTING -s 10.10.10.0/24 -o enp1s0 -j MASQUERADE
+```
+> `-t nat`: tabela de NAT (tradução), não de filtro · `-A POSTROUTING`: regra aplicada depois de decidido o roteamento, na saída · `-s`: filtra pela sub-rede de origem · `-o enp1s0`: só quando sai por essa interface (a "porta pra internet" da VM) · `-j MASQUERADE`: traduz o IP de origem pro IP da própria interface de saída — NAT "empilhado" em cima do NAT que o `virbr0` do Módulo 2 já faz no host
+
+```bash
+sudo iptables -A FORWARD -s 10.10.10.2 -j DROP
+sudo iptables -L FORWARD -v -n
+```
+> `-A FORWARD`: chain que decide sobre tráfego "de passagem" (não destinado à própria VM) · descarta silenciosamente (sem avisar o remetente) todo tráfego de `ns2` · `-v`: mostra contador de pacotes/bytes por regra (prova se ela está de fato interceptando) · `-n`: não resolve IP pra nome (mais rápido)
+
+### Estágio 3 — DNS (conceitual, com teste real)
+
+```bash
+cat /etc/resolv.conf
+sudo ip netns exec ns1 ping -c 2 google.com
+```
+> confirma qual resolvedor a VM usa e testa resolução de nome de dentro de um namespace — só depende de existir rota até o IP do `nameserver` configurado; se fosse loopback (`127.0.0.53`, comum com `systemd-resolved`) teria falhado, por namespace isolar o `lo`
 
 ---
 
