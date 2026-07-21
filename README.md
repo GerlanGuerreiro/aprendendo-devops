@@ -18,7 +18,7 @@ Ponto de partida: Python intermediário, Shell Script, Java, C e Linux — a tri
 - [x] **02. Laboratório Isolado (KVM)** ✅ — VM isolada via QEMU/KVM/libvirt, acesso só por chave SSH
 - [x] **03. Setup do Projeto na VM** ✅ — venv isolado, API e simulador rodando dentro da VM via SSH
 - [x] **04. Redes Linux Fundamentais** ✅ — bridges/namespaces (veth pairs), firewall NAT+DROP (iptables-nft), DNS conceitual
-- [ ] **05. Isolamento de Baixo Nível** — chroot, LXC
+- [x] **05. Isolamento de Baixo Nível** ✅ — chroot (sem isolamento de PID/UID), LXC (namespaces + cgroups)
 - [ ] **06. Conteinerização Moderna** — Docker, Podman (rootless)
 - [ ] **07. Orquestração Local** — Docker Compose, K3s
 - [ ] **08. Observabilidade** — Prometheus + Grafana

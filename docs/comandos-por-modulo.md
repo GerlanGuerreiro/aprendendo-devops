@@ -239,6 +239,76 @@ sudo ip netns exec ns1 ping -c 2 google.com
 
 ---
 
+## Módulo 5 — Isolamento de Baixo Nível (chroot & LXC)
+
+### Estágio 1 — chroot puro
+
+```bash
+mkdir -p ~/chroot-lab/{bin,lib,lib64,lib/x86_64-linux-gnu}
+ldd /bin/bash
+```
+> `ldd`: lista as bibliotecas dinâmicas (`.so`) que um binário precisa em tempo de execução — sem elas o binário não roda; `linux-vdso.so.1` não é copiado (injetado pelo próprio kernel na memória de todo processo, não é arquivo em disco)
+
+```bash
+cp /bin/bash ~/chroot-lab/bin/
+cp /lib/x86_64-linux-gnu/libtinfo.so.6 ~/chroot-lab/lib/x86_64-linux-gnu/
+cp /lib/x86_64-linux-gnu/libc.so.6 ~/chroot-lab/lib/x86_64-linux-gnu/
+cp /lib64/ld-linux-x86-64.so.2 ~/chroot-lab/lib64/
+sudo chroot ~/chroot-lab /bin/bash
+```
+> `chroot` precisa de `sudo` (chamada de sistema privilegiada) · `/lib64/ld-linux-x86-64.so.2` é o linker dinâmico — carrega as outras `.so` antes do binário rodar · dentro do jail, sem `ls` copiado, listar diretório via glob nativo do bash: `echo /*`
+
+```bash
+echo $$
+kill -0 <PID_de_um_processo_do_host> && echo "eu poderia matar esse processo"
+```
+> `$$`: PID do processo atual · `kill -0`: não envia sinal nenhum, só testa se haveria permissão — prova (sem risco) que root do jail tem o mesmo alcance de root do host, porque `chroot` não isola nem PID nem UID
+
+```bash
+sudo readlink /proc/<PID>/root
+```
+> rodado de **fora** do jail: mostra pra onde aquele PID específico tem a raiz (`/`) redirecionada — prova que host e processo "isolado" compartilham a mesma tabela de processos, só com metadado de root diferente por processo
+
+### Estágio 3 — LXC via CLI
+
+```bash
+sudo apt install lxc
+```
+> traz `lxc-create`/`lxc-start`/`lxc-attach` + o serviço `lxc-net` (cria a bridge `lxcbr0` sozinho, mesmo papel da `virbr0` do Módulo 2 e da `br-lab` manual do Módulo 4)
+
+```bash
+sudo lxc-create -t download -n meucontainer -- -d debian -r trixie -a amd64
+```
+> `-t download`: template genérico que baixa uma imagem pronta de `images.linuxcontainers.org` (padrão atual do Debian, substituiu os templates por distro) · argumentos depois do `--` vão pro template: distro, release, arquitetura
+
+```bash
+sudo lxc-start -n meucontainer -d
+sudo lxc-info -n meucontainer
+```
+> `-d`: roda em background (daemon) · `lxc-info` mostra estado, **PID no host** do processo `init` do container, IP e interface `veth*` (o mesmo mecanismo de veth pair criado manualmente no Módulo 4, aqui automatizado)
+
+```bash
+sudo lxc-attach -n meucontainer -- ps aux
+ps -p <PID_mostrado_pelo_lxc-info>
+```
+> compara a visão de dentro (PID 1 = `/sbin/init`) com a de fora (PID real do host) — números diferentes pro mesmo processo físico provam o namespace de PID funcionando, ao contrário do Estágio 1
+
+```bash
+sudo lxc-attach -n meucontainer -- hostname
+sudo lxc-attach -n meucontainer -- ping -c 3 8.8.8.8
+```
+> hostname isolado (namespace UTS) · ping funcionando prova NAT em dupla camada: `lxcbr0` (regra `MASQUERADE` que o `lxc-net` já cria sozinho) → `virbr0` (NAT do Módulo 2) → internet
+
+```bash
+sudo lxc-cgroup -n meucontainer memory.current
+sudo lxc-cgroup -n meucontainer memory.max
+sudo lxc-cgroup -n meucontainer memory.max 50M
+sudo lxc-cgroup -n meucontainer memory.events
+```
+> `lxc-cgroup`: lê/escreve direto nos arquivos de controle do cgroup do container, por fora · `memory.max`: teto de memória (cgroup v2) · `memory.events`: contadores — `max` conta quantas vezes o uso bateu no teto e o kernel precisou reclamar memória (ex: swap); `oom_kill` só incrementa se a reclamação falhar e um processo precisar ser morto — teto atingido não é sinônimo de processo morto
+
+---
+
 ## Atalhos do projeto
 
 ```bash
