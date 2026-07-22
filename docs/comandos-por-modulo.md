@@ -309,6 +309,98 @@ sudo lxc-cgroup -n meucontainer memory.events
 
 ---
 
+## Módulo 6 — Conteinerização Moderna (Docker & Podman)
+
+### Estágio 1 — instalação do Docker CE (repositório oficial)
+
+```bash
+sudo apt install -y ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+> repositório oficial em vez do pacote `docker.io` do Debian: traz `docker-buildx-plugin`/`docker-compose-plugin` (Compose v2) já integrados, necessários pro Módulo 7 · `gpg --dearmor`: converte a chave ASCII pro formato binário que o `apt` espera em `signed-by` · `install -m 0755 -d`: cria diretório com permissão explícita, em vez de depender do `umask` padrão
+
+```bash
+sudo usermod -aG docker gerlan
+# (abrir sessão SSH nova — grupo só aplica em login novo)
+groups
+docker ps
+```
+> `-aG`: append ao grupo secundário (não substitui os grupos existentes) · **atenção de segurança**: grupo `docker` equivale a root no host — quem executa qualquer comando é o `dockerd` (daemon que roda como root), não o usuário; aceito conscientemente só por ser ambiente de laboratório
+
+### Estágio 2 — Dockerfile com camadas otimizadas
+
+`Dockerfile`:
+```dockerfile
+FROM python:3.13-slim
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+RUN useradd --create-home appuser
+COPY app/ ./app/
+USER appuser
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+> ordem das camadas importa: dependências (`COPY requirements.txt` + `pip install`) e criação de usuário **antes** do `COPY app/` — assim só a camada de código invalida cache a cada mudança; uma camada mudar invalida **todas** as seguintes em cascata, mesmo sem relação de conteúdo (por isso `useradd` precisou subir de posição) · `PYTHONDONTWRITEBYTECODE`: não grava `.pyc` (container é efêmero) · `PYTHONUNBUFFERED`: logs aparecem na hora, sem esperar buffer encher · `USER appuser`: processo roda sem privilégio dentro do container, independente do grupo `docker` do host
+
+`.dockerignore`:
+```
+venv/
+__pycache__/
+*.pyc
+.git/
+scripts/
+```
+> equivalente ao `.gitignore`, mas pro contexto de build — sem isso, tudo seria enviado pro daemon a cada `docker build`, mesmo o que nunca é copiado pra imagem
+
+### Estágio 3 — build + run
+
+```bash
+docker build -t telemetria-api:v1 .
+docker run -d --name telemetria-api -p 8000:8000 telemetria-api:v1
+curl http://localhost:8000/health
+docker logs telemetria-api
+docker top telemetria-api
+```
+> `-t`: nome+tag da imagem (decidido no `build`, independente do `--name` do `run`) · `-d`: detached, roda em segundo plano · `-p host:container`: mapeia porta do host pra porta do container · `docker top`: mostra o PID do processo dentro do container visto do host — compara com o PID (`[1]`) que aparece no log de dentro, mesma técnica do namespace de PID do LXC (Módulo 5)
+
+```bash
+docker images
+docker ps -a
+docker stop telemetria-api && docker rm telemetria-api
+```
+> atualizar a versão de um container rodando é manual: parar + remover + subir de novo com a tag nova — não existe atualização automática no Docker puro (motivação real do Compose/K3s, Módulo 7)
+
+### Estágio 4 — Podman rootless
+
+```bash
+sudo apt install -y podman
+podman build -t telemetria-api:v3 .
+podman run -d --name telemetria-api-podman -p 8001:8000 telemetria-api:v3
+curl http://localhost:8001/health
+podman top telemetria-api-podman
+```
+> sintaxe quase idêntica ao Docker de propósito (compatibilidade via padrão aberto OCI) · sem `sudo` em nenhum momento — rootless de verdade, sem daemon central
+
+```bash
+ps aux | grep uvicorn        # roda no host, fora de qualquer container
+cat /etc/subuid
+cat /proc/<PID>/uid_map
+```
+> prova que "root" dentro de um container Podman rootless nunca é root de fora: o UID do processo, visto do host, ou vem da faixa `/etc/subuid` (usuário não-root dentro) ou é o próprio usuário invocador (UID 0/root dentro) — nunca root real · `uid_map`: mapeamento bruto mantido pelo kernel por processo (`0 1000 1` = UID 0 do container é UID 1000 do host; `1 100000 65536` = o resto da faixa vai pro `/etc/subuid`) — mesma técnica de introspecção via `/proc` do Módulo 5 (`readlink /proc/<PID>/root`), agora aplicada a UID em vez de raiz de filesystem
+
+---
+
 ## Atalhos do projeto
 
 ```bash
