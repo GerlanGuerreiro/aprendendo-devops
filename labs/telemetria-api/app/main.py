@@ -17,4 +17,5 @@ def on_startup() -> None:
 
 @app.get("/health")
 def health() -> dict:
+    logger.info("health_check", extra={"event": "health_check"})
     return {"status": "ok"}
