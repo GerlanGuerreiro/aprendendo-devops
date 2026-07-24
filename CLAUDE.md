@@ -91,6 +91,7 @@ O objetivo real desta pasta é **a trilha de aprendizado DevOps em si** — não
 - [ ] **Módulo 7: Multi-containers e Orquestração Local (Compose & K3s)**
   - Orquestração da API + Banco de Dados usando Docker Compose.
   - Migração rápida para K3s (Kubernetes leve).
+  - Introdução ao GitHub Actions como **CI** (não CD ainda): workflow que builda a imagem Docker da `telemetria-api` e roda lint/testes a cada push — nasce aqui porque já existe algo buildável (Dockerfile do Módulo 6), sem depender de destino de produção. CD (deploy de verdade) fica reservado pro Módulo 12, quando existir uma VPS real.
 - [ ] **Módulo 8: Observabilidade (Prometheus & Grafana)** `🆕`
   - Instrumentar a API de telemetria para expor métricas no formato Prometheus (`/metrics`).
   - Deploy do Prometheus + Grafana via container, reaproveitando o Módulo 6/7.
@@ -107,9 +108,10 @@ O objetivo real desta pasta é **a trilha de aprendizado DevOps em si** — não
   - Hooks (`settings.json`) — automatizar checks (lint, testes, permissões) a cada ação.
   - MCP servers — conectar Claude Code a ferramentas externas do projeto.
   - Modo headless / Claude Code SDK — rodar Claude Code de forma não-interativa, preparando terreno para o Módulo 12.
-- [ ] **Módulo 12: CI/CD & Deploy em Produção (Oracle Cloud VPS)**
+- [ ] **Módulo 12: CD & Deploy em Produção (Oracle Cloud VPS)**
   - Provisionamento e hardening de VPS na nuvem.
-  - Automação do deploy via GitHub Actions (podendo incorporar Claude Code headless do Módulo 11 como etapa da pipeline).
+  - Acesso administrativo via VPN (WireGuard) — restringir SSH e qualquer painel/serviço interno (Grafana, n8n) a só quem está dentro do túnel, em vez de expor a porta publicamente; único serviço exposto ao mundo deve ser a API em si. Aprofundamento de VPN (comparação com OpenVPN, outros cenários) fica reservado pra próxima trilha (Linux Server Fundamentals).
+  - Extensão do pipeline de **CI** já criado no Módulo 7 com a etapa de **CD**: deploy automático pra VPS via GitHub Actions (podendo incorporar Claude Code headless do Módulo 11 como etapa da pipeline) — fecha o ciclo completo build→teste→deploy.
 
 ---
 

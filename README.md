@@ -20,12 +20,12 @@ Ponto de partida: Python intermediário, Shell Script, Java, C e Linux — a tri
 - [x] **04. Redes Linux Fundamentais** ✅ — bridges/namespaces (veth pairs), firewall NAT+DROP (iptables-nft), DNS conceitual
 - [x] **05. Isolamento de Baixo Nível** ✅ — chroot (sem isolamento de PID/UID), LXC (namespaces + cgroups)
 - [x] **06. Conteinerização Moderna** ✅ — Dockerfile com camadas otimizadas (provado via cache), Podman rootless (provado via `/proc/uid_map`)
-- [ ] **07. Orquestração Local** — Docker Compose, K3s
+- [ ] **07. Orquestração Local** — Docker Compose, K3s, CI (GitHub Actions: build + lint a cada push)
 - [ ] **08. Observabilidade** — Prometheus + Grafana
 - [ ] **09. Automação Híbrida** — n8n + webhooks
 - [ ] **10. Infraestrutura como Código** — Terraform + Ansible
 - [ ] **11. Proficiência Avançada em Claude Code** — subagents, hooks, MCP, modo headless
-- [ ] **12. CI/CD & Deploy em Produção** — GitHub Actions + VPS (Oracle Cloud)
+- [ ] **12. CD & Deploy em Produção** — VPN (WireGuard) + VPS (Oracle Cloud) + GitHub Actions (deploy)
 
 ## 🧪 Lab: Monitor de Frota IoT
 
@@ -37,7 +37,7 @@ Payload usado para exercitar cada módulo: API REST de ingestão/consulta de tel
 
 ## 🧰 Ferramentas & Práticas
 
-Git · SSH · GPG · KVM/libvirt · Docker · Podman · Kubernetes (K3s) · Prometheus · Grafana · Terraform · Ansible · GitHub Actions · Claude Code
+Git · SSH · GPG · KVM/libvirt · Docker · Podman · Kubernetes (K3s) · Prometheus · Grafana · Terraform · Ansible · GitHub Actions · WireGuard · Claude Code
 
 ---
 
