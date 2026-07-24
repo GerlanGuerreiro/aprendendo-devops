@@ -401,6 +401,35 @@ cat /proc/<PID>/uid_map
 
 ---
 
+## Módulo 7 — Multi-containers e Orquestração Local (Compose & K3s)
+
+### Estágio 1 — persistência real (API + Postgres avulso)
+
+```bash
+docker run -d --name pg-lab -e POSTGRES_PASSWORD=devops -e POSTGRES_DB=telemetria -p 5432:5432 postgres:16
+```
+> Postgres avulso (`docker run` direto, sem Compose ainda — isso é só pra provar o código antes do Estágio 2 declarar isso via `docker-compose.yml`) · `-e`: variáveis de ambiente que a imagem oficial do Postgres usa pra se autoconfigurar (usuário `postgres`, senha, banco inicial) · `-p 5432:5432`: expõe a porta padrão do Postgres no host da VM
+
+```bash
+cd ~/aprendendo-devops && git pull
+cd labs/telemetria-api
+source venv/bin/activate
+pip install -r requirements.txt
+export DATABASE_URL="postgresql+psycopg://postgres:devops@localhost:5432/telemetria"
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+> `DATABASE_URL` no formato `dialeto+driver://usuário:senha@host:porta/banco` — `postgresql+psycopg` diz ao SQLAlchemy pra usar o driver `psycopg` (v3) especificamente · lida como variável de ambiente sem valor padrão no código (`os.environ["DATABASE_URL"]`), então falha alto e rápido se esquecida, em vez de mascarar erro de config
+
+```bash
+curl -X POST http://localhost:8000/readings -H "Content-Type: application/json" \
+  -d '{"sensor_id":"sensor-01","temperature":25.5,"humidity":60.0,"timestamp":"2026-07-24T12:00:00Z"}'
+curl http://localhost:8000/readings
+python scripts/sensor_simulator.py
+```
+> `POST` grava (responde `201` com o registro + `id` gerado pelo banco) · `GET` só consulta · o simulador passou a mandar `POST` de verdade pra API a cada leitura gerada, em vez de só logar local · teste de prova: mandar `"id": 999` de propósito no corpo do `POST` — o `SensorReadingCreate` (schema Pydantic) nem declara esse campo, então ele é ignorado silenciosamente e o `id` real vem sequencial do Postgres
+
+---
+
 ## Atalhos do projeto
 
 ```bash
